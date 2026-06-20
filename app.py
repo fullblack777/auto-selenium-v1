@@ -22,6 +22,7 @@ from colorama import init, Fore, Style
 init(autoreset=True)
 
 PORT = int(os.environ.get('PORT', 5000))
+BASE_URL = os.environ.get('RENDER_EXTERNAL_URL', f'http://localhost:{PORT}')
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_hex(32)
 CORS(app)
@@ -45,7 +46,7 @@ KEYS = {
 }
 
 MUSIC = "https://www.youtube.com/embed/5eenCZAXp5A?autoplay=1&loop=1&playlist=5eenCZAXp5A&controls=0&disablekb=1&modestbranding=1&rel=0&showinfo=0&fs=0&iv_load_policy=3"
-BG_IMAGE = "https://www.pornolandia.xxx/media/photos/250641.jpg"
+BG_IMAGE = "https://www.pornolandia.xxx/media/photos/250691.jpg"
 
 CSS = """
 <style>
@@ -59,17 +60,18 @@ CSS = """
         display: flex; justify-content: center; align-items: center; min-height: 100vh;
         background-image: url('BG_PLACEHOLDER');
         background-size: cover; background-position: center; background-repeat: no-repeat;
+        background-attachment: fixed;
         position: relative;
     }
     .login-container::before {
         content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+        background: rgba(0,0,0,0.45);
     }
     .login-box {
         position: relative; z-index: 1;
-        background: rgba(20,20,35,0.85); border: 1px solid rgba(255,107,53,0.4);
+        background: rgba(20,20,35,0.55); border: 1px solid rgba(255,107,53,0.5);
         border-radius: 20px; padding: 40px; max-width: 450px; width: 90%;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.6); backdrop-filter: blur(15px);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.4); backdrop-filter: blur(12px);
         text-align: center;
     }
     .login-box .logo {
@@ -78,14 +80,16 @@ CSS = """
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         margin-bottom: 10px;
     }
-    .login-box .subtitle { color: var(--t3); font-size: 0.8em; margin-bottom: 30px; letter-spacing: 2px; }
+    .login-box .subtitle { color: rgba(255,255,255,0.7); font-size: 0.8em; margin-bottom: 30px; letter-spacing: 2px; }
     .login-box input {
-        width: 100%; padding: 14px 18px; background: rgba(0,0,0,0.5);
-        border: 2px solid rgba(255,107,53,0.3); border-radius: 12px;
+        width: 100%; padding: 14px 18px; background: rgba(0,0,0,0.35);
+        border: 2px solid rgba(255,107,53,0.4); border-radius: 12px;
         color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 0.9em;
         outline: none; transition: all 0.3s; text-align: center;
+        backdrop-filter: blur(5px);
     }
-    .login-box input:focus { border-color: #ff6b35; box-shadow: 0 0 20px rgba(255,107,53,0.3); }
+    .login-box input::placeholder { color: rgba(255,255,255,0.5); }
+    .login-box input:focus { border-color: #ff6b35; box-shadow: 0 0 20px rgba(255,107,53,0.3); background: rgba(0,0,0,0.5); }
     .login-box .btn {
         width: 100%; padding: 14px; border: none; border-radius: 12px;
         background: linear-gradient(135deg, #ff6b35, #ff4500); color: #fff;
@@ -362,6 +366,8 @@ function dl(){{if(!sc){{alert('Gere primeiro!');return;}}var b=new Blob([sc],{{t
 # ============================================
 @app.route('/', methods=['GET', 'POST'])
 def login():
+    if 'key' in session:
+        return redirect('/app')
     error = ''
     if request.method == 'POST':
         key = request.form.get('key', '').strip()
@@ -371,7 +377,7 @@ def login():
             session['expira'] = KEYS[key]['expira']
             return redirect('/app')
         else:
-            error = '❌ KEY INVÁLIDA! Verifique e tente novamente.'
+            error = '❌ KEY INVALIDA!'
     return render_template_string(LOGIN_PAGE, error=error)
 
 @app.route('/app')
@@ -388,7 +394,7 @@ def logout():
 @app.route('/api/generate', methods=['POST'])
 def api_gen():
     if 'key' not in session:
-        return jsonify({'success':False,'message':'Faça login primeiro!'})
+        return jsonify({'success':False,'message':'Nao autenticado!'})
     d = request.json
     txt = d.get('steps','')
     nm = d.get('script_name','script.py')
@@ -406,14 +412,12 @@ def ping(): return jsonify({'status':'online'})
 
 def ka():
     while True:
-        try: http_requests.get(f"http://localhost:{PORT}/ping", timeout=10)
+        try: http_requests.get(f"{BASE_URL}/ping", timeout=10)
         except: pass
         time.sleep(240)
 
 if __name__ == '__main__':
     threading.Thread(target=ka, daemon=True).start()
-    print(f"\n{Fore.CYAN}╔══════════════════════════════════╗")
-    print(f"{Fore.CYAN}║ {Fore.YELLOW}AUTO CODER v7 - COM LOGIN{Fore.CYAN}   ║")
-    print(f"{Fore.CYAN}║ {Fore.WHITE}http://localhost:{PORT}{Fore.CYAN}           ║")
-    print(f"{Fore.CYAN}╚══════════════════════════════════╝{Style.RESET_ALL}\n")
+    print(f"\n{Fore.CYAN}AUTO CODER v7 - LOGIN + KEY{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}http://localhost:{PORT}{Style.RESET_ALL}\n")
     app.run(host='0.0.0.0', port=PORT, debug=False, threaded=True)
