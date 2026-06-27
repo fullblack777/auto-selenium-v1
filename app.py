@@ -38,11 +38,14 @@ KEYS = {
     "772233vipbot/id258484895": {"user": "@77", "expira": "14/07/2026"},
     "Satoxzlapvipbot/id14062026123456": {"user": "@Satoxzlap", "expira": "16/07/2026"},
     "Dearrascaeta_85vipbot/id1406202612345": {"user": "@Dearrascaeta_85", "expira": "16/07/2026"},
-    "elbig171vipbot/id20062026050634": {"user": "@elbig171", "expira": "16/07/2026"},
-    "usuarionmbysvipbot/id20062026050634": {"user": "@usuarionmbys", "expira": "17/07/2026"},
-    "f1l1p3vipbot/id20062026050634": {"user": "@F1l1p3", "expira": "18/07/2026"},
-    "mwx_oficialvipbot/id20062026050634": {"user": "@MWX_OFICIAL", "expira": "17/07/2026"},
-    "grupofreevipbot/id20062026050634": {"user": "GRUPOFREE", "expira": "18/07/2026"},
+    "elbig171vipbot/id27062026053734": {"user": "@elbig171", "expira": "16/07/2026"},
+    "usuarionmbysvipbot/id27062026053734": {"user": "@usuarionmbys", "expira": "17/07/2026"},
+    "f1l1p3vipbot/id27062026053734": {"user": "@F1l1p3", "expira": "18/07/2026"},
+    "mwx_oficialvipbot/id27062026053734": {"user": "@MWX_OFICIAL", "expira": "17/07/2026"},
+    "grupofreevipbot/id27062026053734": {"user": "GRUPOFREE", "expira": "18/07/2026"},
+    "dreamvipbot/id27062026053734": {"user": "dream", "expira": "21/07/2026"},
+    "rauldefranjavipbot/id27062026053734": {"user": "@Rauldefranja", "expira": "22/07/2026"},
+    "kaiooojaajvipbot/id27062026053734": {"user": "@kaioOojaaj", "expira": "27/07/2026"}
 }
 
 MUSIC = "https://www.youtube.com/embed/5eenCZAXp5A?autoplay=1&loop=1&playlist=5eenCZAXp5A&controls=0&disablekb=1&modestbranding=1&rel=0&showinfo=0&fs=0&iv_load_policy=3"
