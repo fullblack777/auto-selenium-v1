@@ -45,10 +45,12 @@ KEYS = {
     "grupofreevipbot/id27062026053734": {"user": "GRUPOFREE", "expira": "18/07/2026"},
     "dreamvipbot/id27062026053734": {"user": "dream", "expira": "21/07/2026"},
     "rauldefranjavipbot/id27062026053734": {"user": "@Rauldefranja", "expira": "22/07/2026"},
-    "kaiooojaajvipbot/id27062026053734": {"user": "@kaioOojaaj", "expira": "27/07/2026"}
+    "kaiooojaajvipbot/id27062026053734": {"user": "@kaioOojaaj", "expira": "27/07/2026"},
+    "bitmanxdvipbot/id29062026175016": {"user": "@BitmanXD", "expira": "29/07/2026"},
+    "doutordocsvipbot/id29062026175016": {"user": "@doutordocs", "expira": "30/07/2026"}
 }
 
-MUSIC = "https://www.youtube.com/embed/5eenCZAXp5A?autoplay=1&loop=1&playlist=5eenCZAXp5A&controls=0&disablekb=1&modestbranding=1&rel=0&showinfo=0&fs=0&iv_load_policy=3"
+MUSIC = "https://www.youtube.com/embed/saTSBPbM4Ag?autoplay=1&loop=1&playlist=saTSBPbM4Ag&controls=0&disablekb=1&modestbranding=1&rel=0&showinfo=0&fs=0&iv_load_policy=3"
 BG_IMAGE = "https://www.pornolandia.xxx/media/photos/250691.jpg"
 
 CSS = """
@@ -317,8 +319,30 @@ class Gen:
 # PÁGINAS
 # ============================================
 LOGIN_PAGE = f"""<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Auto Coder v7 - Login</title>{CSS.replace('BG_PLACEHOLDER', BG_IMAGE)}</head><body>
-<iframe src="{MUSIC}" allow="autoplay" style="position:fixed;top:-100px;left:-100px;width:1px;height:1px;opacity:0;border:none;pointer-events:none" id="mf"></iframe>
-<script>setInterval(function(){{try{{document.getElementById('mf').contentWindow.postMessage('{{"event":"command","func":"playVideo","args":""}}','*');}}catch(e){{}}}},3000);</script>
+<iframe src="{MUSIC}" allow="autoplay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;opacity:0;border:none;pointer-events:none;z-index:-1" id="mf"></iframe>
+<script>
+(function(){{
+    var iframe = document.getElementById('mf');
+    var vol = 100;
+    function tentarVolume() {{
+        try {{
+            iframe.contentWindow.postMessage(JSON.stringify({{"event":"command","func":"setVolume","args":[vol]}}), '*');
+        }} catch(e) {{}}
+    }}
+    tentarVolume();
+    setInterval(function(){{
+        tentarVolume();
+        try {{
+            iframe.contentWindow.postMessage(JSON.stringify({{"event":"command","func":"playVideo","args":""}}), '*');
+        }} catch(e) {{}}
+    }}, 500);
+    setInterval(function(){{
+        try {{
+            iframe.contentWindow.postMessage(JSON.stringify({{"event":"command","func":"unMute","args":""}}), '*');
+        }} catch(e) {{}}
+    }}, 1000);
+}})();
+</script>
 <div class="login-container">
     <div class="login-box">
         <div class="logo">AUTO CODER v7</div>
@@ -333,8 +357,30 @@ LOGIN_PAGE = f"""<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><
 </body></html>"""
 
 MAIN_PAGE = f"""<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Auto Coder v7</title>{CSS}</head><body>
-<iframe src="{MUSIC}" allow="autoplay" style="position:fixed;top:-100px;left:-100px;width:1px;height:1px;opacity:0;border:none;pointer-events:none" id="mf"></iframe>
-<script>setInterval(function(){{try{{document.getElementById('mf').contentWindow.postMessage('{{"event":"command","func":"playVideo","args":""}}','*');}}catch(e){{}}}},3000);</script>
+<iframe src="{MUSIC}" allow="autoplay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;opacity:0;border:none;pointer-events:none;z-index:-1" id="mf"></iframe>
+<script>
+(function(){{
+    var iframe = document.getElementById('mf');
+    var vol = 100;
+    function tentarVolume() {{
+        try {{
+            iframe.contentWindow.postMessage(JSON.stringify({{"event":"command","func":"setVolume","args":[vol]}}), '*');
+        }} catch(e) {{}}
+    }}
+    tentarVolume();
+    setInterval(function(){{
+        tentarVolume();
+        try {{
+            iframe.contentWindow.postMessage(JSON.stringify({{"event":"command","func":"playVideo","args":""}}), '*');
+        }} catch(e) {{}}
+    }}, 500);
+    setInterval(function(){{
+        try {{
+            iframe.contentWindow.postMessage(JSON.stringify({{"event":"command","func":"unMute","args":""}}), '*');
+        }} catch(e) {{}}
+    }}, 1000);
+}})();
+</script>
 <div class="app">
     <div class="top-bar">
         <div><span style="color:var(--su);">✅ Logado: {{{{ user }}}}</span> | <span style="color:var(--t3);">Expira: {{{{ expira }}}}</span></div>
@@ -415,9 +461,7 @@ def ping(): return jsonify({'status':'online'})
 
 def ka():
     while True:
-        try: http_requests.get(f"{BASE_URL}/ping", timeout=10)
-        except: pass
-        time.sleep(240)
+        time.sleep(999999)
 
 if __name__ == '__main__':
     threading.Thread(target=ka, daemon=True).start()
