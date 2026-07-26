@@ -1,10 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-⚡ SELENIUM AUTO CODER v7 - COM LOGIN + KEY
-Sistema de Login com Keys + Auto Coder
-By @cybersecofc
-"""
 
 import os, sys, json, time, uuid, re, random, secrets, threading
 from datetime import datetime, timedelta
@@ -14,7 +7,7 @@ def install(pkg):
     except: os.system(f"{sys.executable} -m pip install {pkg} --quiet 2>nul")
 
 for d in ['flask','flask-cors','werkzeug','requests','colorama']: install(d)
-
+import base64
 from flask import Flask, render_template_string, jsonify, request, session, redirect, url_for
 from flask_cors import CORS
 import requests as http_requests
@@ -28,30 +21,10 @@ app.config['SECRET_KEY'] = secrets.token_hex(32)
 CORS(app)
 os.makedirs('scripts_gerados', exist_ok=True)
 
-# ============================================
-# BANCO DE DADOS DE KEYS
-# ============================================
-KEYS = {
-    "dopeey2233vipbot/id223309893": {"user": "@dopeeydev", "expira": "14/07/2026"},
-    "chuky2233vipbot/id223309893": {"user": "@chuckysuport", "expira": "14/07/2026"},
-    "kggs012233vipbot/id228565959565": {"user": "@kggs01", "expira": "14/07/2026"},
-    "772233vipbot/id258484895": {"user": "@77", "expira": "14/07/2026"},
-    "Satoxzlapvipbot/id14062026123456": {"user": "@Satoxzlap", "expira": "16/07/2026"},
-    "Dearrascaeta_85vipbot/id1406202612345": {"user": "@Dearrascaeta_85", "expira": "16/07/2026"},
-    "elbig171vipbot/id27062026053734": {"user": "@elbig171", "expira": "16/07/2026"},
-    "usuarionmbysvipbot/id27062026053734": {"user": "@usuarionmbys", "expira": "17/07/2026"},
-    "f1l1p3vipbot/id27062026053734": {"user": "@F1l1p3", "expira": "18/07/2026"},
-    "mwx_oficialvipbot/id27062026053734": {"user": "@MWX_OFICIAL", "expira": "17/07/2026"},
-    "grupofreevipbot/id27062026053734": {"user": "GRUPOFREE", "expira": "18/07/2026"},
-    "dreamvipbot/id27062026053734": {"user": "dream", "expira": "21/07/2026"},
-    "rauldefranjavipbot/id27062026053734": {"user": "@Rauldefranja", "expira": "22/07/2026"},
-    "kaiooojaajvipbot/id27062026053734": {"user": "@kaioOojaaj", "expira": "27/07/2026"},
-    "bitmanxdvipbot/id29062026175016": {"user": "@BitmanXD", "expira": "29/07/2026"},
-    "doutordocsvipbot/id29062026175016": {"user": "@doutordocs", "expira": "30/07/2026"}
-}
+KEYS = json.loads(base64.b64decode("eyJjeWJlciI6IHsidXNlciI6ICJAY3liZXJzZWNvZmMiLCAiZXhwaXJhIjogIjE0LzAxMi8yMDI3In19").decode('utf-8'))
 
-MUSIC = "https://www.youtube.com/embed/saTSBPbM4Ag?autoplay=1&loop=1&playlist=saTSBPbM4Ag&controls=0&disablekb=1&modestbranding=1&rel=0&showinfo=0&fs=0&iv_load_policy=3"
-BG_IMAGE = "https://www.pornolandia.xxx/media/photos/250691.jpg"
+MUSIC = base64.b64decode("aHR0cHM6Ly93d3cueW91dHViZS5jb20vZW1iZWQvc2FUU0JQYk00QWc/YXV0b3BsYXk9MSZsb29wPTEmcGxheWxpc3Q9c2FUU0JQYk00QWcmY29udHJvbHM9MCZkaXNhYmxla2I9MSZtb2Rlc3RicmFuZGluZz0xJnJlbD0wJnNob3dpbmZvPTAmZnM9MCZpdl9sb2FkX3BvbGljeT0z").decode('utf-8')
+BG_IMAGE = base64.b64decode("aHR0cHM6Ly93d3cucG9ybm9sYW5kaWEueHh4L21lZGlhL3Bob3Rvcy8yNDY2NjQuanBn").decode('utf-8')
 
 CSS = """
 <style>
@@ -139,9 +112,6 @@ CSS = """
 </style>
 """
 
-# ============================================
-# PARSER + GERADOR
-# ============================================
 class Parser:
     def parse(text):
         lines = text.strip().split('\n')
@@ -196,7 +166,7 @@ class Gen:
         L = []
         L.append('#!/usr/bin/env python3')
         L.append('# -*- coding: utf-8 -*-')
-        L.append(f'# Auto Coder v7 | Execute: python {name}')
+        L.append(f'# Auto Coder v1 | Execute: python {name}')
         L.append('import os,sys,time,random,re,json')
         L.append('from datetime import datetime')
         L.append('from selenium import webdriver')
@@ -253,7 +223,7 @@ class Gen:
         L.append('')
         L.append('def main():')
         L.append('    sep="="*50;sep2="-"*40')
-        L.append('    print(f"{C}LOGIN CHECKER v7{E}");print(f"{C}{sep}{E}\\n")')
+        L.append('    print(f"{C}LOGIN CHECKER v1{E}");print(f"{C}{sep}{E}\\n")')
         L.append('    logins=load(DB)')
         L.append('    if not logins:print(f"{R}[!] Nenhum login em {DB}{E}");return')
         L.append('    print(f"{C}[*] {len(logins)} logins{E}\\n")')
@@ -315,10 +285,8 @@ class Gen:
         L.append('    except KeyboardInterrupt:print(f"\\n{Y}[!] Fim{E}")')
         return '\n'.join(L)
 
-# ============================================
-# PÁGINAS
-# ============================================
-LOGIN_PAGE = f"""<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Auto Coder v7 - Login</title>{CSS.replace('BG_PLACEHOLDER', BG_IMAGE)}</head><body>
+
+LOGIN_PAGE = f"""<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Auto Coder v1 - Login</title>{CSS.replace('BG_PLACEHOLDER', BG_IMAGE)}</head><body>
 <iframe src="{MUSIC}" allow="autoplay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;opacity:0;border:none;pointer-events:none;z-index:-1" id="mf"></iframe>
 <script>
 (function(){{
@@ -345,7 +313,7 @@ LOGIN_PAGE = f"""<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><
 </script>
 <div class="login-container">
     <div class="login-box">
-        <div class="logo">AUTO CODER v7</div>
+        <div class="logo">AUTO CODER v1</div>
         <div class="subtitle">🔑 DIGITE SUA KEY</div>
         <form method="POST">
             <input type="text" name="key" placeholder="cole sua key aqui..." required>
@@ -356,7 +324,7 @@ LOGIN_PAGE = f"""<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><
 </div>
 </body></html>"""
 
-MAIN_PAGE = f"""<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Auto Coder v7</title>{CSS}</head><body>
+MAIN_PAGE = f"""<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Auto Coder v1</title>{CSS}</head><body>
 <iframe src="{MUSIC}" allow="autoplay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;opacity:0;border:none;pointer-events:none;z-index:-1" id="mf"></iframe>
 <script>
 (function(){{
@@ -386,17 +354,17 @@ MAIN_PAGE = f"""<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><m
         <div><span style="color:var(--su);">✅ Logado: {{{{ user }}}}</span> | <span style="color:var(--t3);">Expira: {{{{ expira }}}}</span></div>
         <a href="/logout" class="btn-logout">SAIR</a>
     </div>
-    <div class="header"><div class="logo-main">AUTO CODER v7</div><div class="subtitle">LOGIN CHECKER</div><div class="badge-row"><span class="badge badge-p">Selenium</span><span class="badge badge-g">Login</span><span class="badge badge-a">Qualquer Site</span></div></div>
+    <div class="header"><div class="logo-main">AUTO CODER v1</div><div class="subtitle">LOGIN CHECKER</div><div class="badge-row"><span class="badge badge-p">Selenium</span><span class="badge badge-g">Login</span><span class="badge badge-a">Qualquer Site</span></div></div>
     <div class="card"><div class="card-title">🔑 Gerador de Script</div><div class="card-desc"><b>Como usar:</b><br>1. Cole <b>URL</b> do site<br>2. Cole <b>campos HTML</b><br>3. Clique <b>GERAR</b><br>4. Logins em <b>db.txt</b> (login:senha)<br>5. Execute: <code>python script.py</code></div>
     <form id="f"><div class="form-group"><label class="form-label">URL + Campos HTML</label><textarea id="st" class="form-input" placeholder="Cole aqui..."></textarea></div>
-    <div class="form-group"><label class="form-label">Nome do Arquivo</label><input type="text" id="nm" class="form-input" value="login_checker.py"></div>
+    <div class="form-group"><label class="form-label">Nome do Arquivo</label><input type="text" id="nm" class="form-input" value="cyber.py"></div>
     <div style="display:flex;gap:10px"><button type="submit" class="btn-main btn-p">⚡ GERAR</button><button type="button" class="btn-main btn-s" onclick="dl()">📥 BAIXAR</button></div></form><div id="mg" style="margin-top:15px"></div></div>
     <div class="card" id="pv" style="display:none"><div class="card-title">Script Gerado</div><div class="code-block" id="cd"></div><div id="sl" style="margin-top:15px"></div></div></div>
 <script>
-var sc='';var fn='login_checker.py';
+var sc='';var fn='cyber.py';
 document.getElementById('f').addEventListener('submit',async function(e){{
 e.preventDefault();document.getElementById('mg').innerHTML='<div class="alert alert-i">Gerando...</div>';
-fn=document.getElementById('nm').value||'login_checker.py';
+fn=document.getElementById('nm').value||'cyber.py';
 try{{
 var r=await fetch('/api/generate',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{steps:document.getElementById('st').value,script_name:fn}})}});
 var d=await r.json();
@@ -410,9 +378,6 @@ document.getElementById('pv').scrollIntoView({{behavior:'smooth'}});}}else{{docu
 function dl(){{if(!sc){{alert('Gere primeiro!');return;}}var b=new Blob([sc],{{type:'text/python'}});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;a.click();}}
 </script></body></html>"""
 
-# ============================================
-# ROTAS
-# ============================================
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if 'key' in session:
@@ -465,6 +430,6 @@ def ka():
 
 if __name__ == '__main__':
     threading.Thread(target=ka, daemon=True).start()
-    print(f"\n{Fore.CYAN}AUTO CODER v7 - LOGIN + KEY{Style.RESET_ALL}")
+    print(f"\n{Fore.CYAN}AUTO CODER v1 - LOGIN + KEY{Style.RESET_ALL}")
     print(f"{Fore.WHITE}http://localhost:{PORT}{Style.RESET_ALL}\n")
     app.run(host='0.0.0.0', port=PORT, debug=False, threaded=True)
