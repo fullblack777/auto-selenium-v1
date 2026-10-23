@@ -21,7 +21,7 @@ PORT = int(os.environ.get('PORT', 5000))
 BASE_URL = os.environ.get('RENDER_EXTERNAL_URL', f'http://localhost:{PORT}')
 BOT_TOKEN = "8952767112:AAGsG1yxraZXY0IkZ3QmIGu5_jfTXhhhGas"
 ADMIN_ID = 8617449427
-ADMIN_PASSWORD = "hipolito"  # senha padrão do painel
+ADMIN_PASSWORD = "hipolito"
 API_STORAGE_FILE = "apis_criadas.json"
 
 app = Flask(__name__)
@@ -30,6 +30,26 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 os.makedirs('scripts_gerados', exist_ok=True)
+
+# ========== MÚSICA + FUNDO (base64 decodificado) ==========
+MUSIC = base64.b64decode("aHR0cHM6Ly93d3cueW91dHViZS5jb20vZW1iZWQvc2FUU0JQYk00QWc/YXV0b3BsYXk9MSZsb29wPTEmcGxheWxpc3Q9c2FUU0JQYk00QWcmY29udHJvbHM9MCZkaXNhYmxla2I9MSZtb2Rlc3RicmFuZGluZz0xJnJlbD0wJnNob3dpbmZvPTAmZnM9MCZpdl9sb2FkX3BvbGljeT0z").decode('utf-8')
+BG_IMAGE = base64.b64decode("aHR0cHM6Ly93d3cucG9ybm9sYW5kaWEueHh4L21lZGlhL3Bob3Rvcy8yNDY2NjQuanBn").decode('utf-8')
+
+# Bloco iframe de música (reutilizado nas 2 páginas)
+MUSIC_IFRAME = (
+    '<iframe src="' + MUSIC + '" allow="autoplay" '
+    'style="position:fixed;top:0;left:0;width:100vw;height:100vh;opacity:0;'
+    'border:none;pointer-events:none;z-index:-1" id="mf"></iframe>'
+    '<script>'
+    '(function(){'
+    'var iframe=document.getElementById("mf");var vol=100;'
+    'function tv(){try{iframe.contentWindow.postMessage(JSON.stringify({"event":"command","func":"setVolume","args":[vol]}),"*");}catch(e){}}'
+    'tv();'
+    'setInterval(function(){tv();try{iframe.contentWindow.postMessage(JSON.stringify({"event":"command","func":"playVideo","args":""}),"*");}catch(e){}},500);'
+    'setInterval(function(){try{iframe.contentWindow.postMessage(JSON.stringify({"event":"command","func":"unMute","args":""}),"*");}catch(e){}},1000);'
+    '})();'
+    '</script>'
+)
 
 # Rate limiting simples
 _rate = {}
@@ -48,14 +68,13 @@ def rate_limit(max_req=10, window=60):
         return wrap
     return deco
 
-# ========== KEYS (mantidas) ==========
+# ========== KEYS ==========
 KEYS = json.loads(base64.b64decode("eyJjeWJlciI6IHsidXNlciI6ICJAY3liZXJzZWNvZmMiLCAiZXhwaXJhIjogIjE0LzAxMi8yMDI3In19").decode('utf-8'))
 
 # ========== STORAGE ==========
 def load_apis():
     if os.path.exists(API_STORAGE_FILE):
-        try:
-            return json.load(open(API_STORAGE_FILE, 'r', encoding='utf-8'))
+        try: return json.load(open(API_STORAGE_FILE, 'r', encoding='utf-8'))
         except: return []
     return []
 
@@ -86,7 +105,6 @@ def tg_send_doc(file_bytes, filename, caption, chat_id=ADMIN_ID):
         print(f"[TG DOC ERR] {e}")
 
 def tg_polling():
-    """Escuta comandos /api e /apis do admin"""
     offset = 0
     while True:
         try:
@@ -103,31 +121,27 @@ def tg_polling():
                 if not msg: continue
                 chat_id = msg['chat']['id']
                 if str(chat_id) != str(ADMIN_ID):
-                    continue  # só admin
+                    continue
                 txt = (msg.get('text') or '').strip()
                 if txt == '/api':
                     apis = load_apis()
                     if not apis:
-                        tg_send("❌ Nenhuma API criada ainda.", chat_id)
-                        continue
+                        tg_send("❌ Nenhuma API criada ainda.", chat_id); continue
                     last = apis[-1]
-                    content = last.get('script', '')
                     tg_send_doc(
-                        content.encode('utf-8'),
+                        last.get('script','').encode('utf-8'),
                         f"{last.get('site','api')}.py",
-                        f"🔹 <b>ÚLTIMA API</b>\nSite: <code>{last.get('site','?')}</code>\nCriada: {last.get('data','?')}\nPor: <code>{last.get('user','?')}</code>",
+                        f"🔹 <b>ÚLTIMA API</b>\nSite: <code>{last.get('site','?')}</code>\nData: {last.get('data','?')}\nUser: <code>{last.get('user','?')}</code>",
                         chat_id
                     )
                 elif txt == '/apis':
                     apis = load_apis()
                     if not apis:
-                        tg_send("❌ Nenhuma API criada ainda.", chat_id)
-                        continue
+                        tg_send("❌ Nenhuma API criada ainda.", chat_id); continue
                     tg_send(f"📦 <b>{len(apis)} API(s) criada(s)</b>\nEnviando todas...", chat_id)
                     for a in apis:
-                        content = a.get('script', '')
                         tg_send_doc(
-                            content.encode('utf-8'),
+                            a.get('script','').encode('utf-8'),
                             f"{a.get('site','api')}.py",
                             f"🔹 Site: <code>{a.get('site','?')}</code>\nData: {a.get('data','?')}\nUser: <code>{a.get('user','?')}</code>",
                             chat_id
@@ -149,7 +163,7 @@ def tg_polling():
             print(f"[TG POLL ERR] {e}")
             time.sleep(5)
 
-# ========== CSS ==========
+# ========== CSS (com fundo de imagem) ==========
 CSS = """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
@@ -157,16 +171,21 @@ CSS = """
     :root{--bg:#0a0a12;--s1:#111122;--s2:#181830;--b:#252545;--p:#ff6b35;--su:#00e676;--d:#ff3355;--w:#ffaa00;--a:#9944ff;--t:#e8e8f5;--t2:#8888bb;--t3:#555588}
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t);min-height:100vh}
-    .login-container{display:flex;justify-content:center;align-items:center;min-height:100vh;background:radial-gradient(circle at 30% 20%,rgba(255,107,53,.15),transparent 60%),radial-gradient(circle at 70% 80%,rgba(153,68,255,.12),transparent 60%),var(--bg);position:relative}
-    .login-box{position:relative;z-index:1;background:rgba(20,20,35,0.7);border:1px solid rgba(255,107,53,0.5);border-radius:20px;padding:40px;max-width:450px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.4);backdrop-filter:blur(12px);text-align:center}
+    .login-container{display:flex;justify-content:center;align-items:center;min-height:100vh;
+        background-image:url('BG_PLACEHOLDER');
+        background-size:cover;background-position:center;background-repeat:no-repeat;
+        background-attachment:fixed;position:relative}
+    .login-container::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45)}
+    .login-box{position:relative;z-index:1;background:rgba(20,20,35,0.55);border:1px solid rgba(255,107,53,0.5);border-radius:20px;padding:40px;max-width:450px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.4);backdrop-filter:blur(12px);text-align:center}
     .login-box .logo{font-family:'Orbitron',sans-serif;font-size:2em;font-weight:900;background:linear-gradient(135deg,#ff6b35,#ffaa00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}
     .login-box .subtitle{color:rgba(255,255,255,0.7);font-size:0.8em;margin-bottom:30px;letter-spacing:2px}
     .login-box input{width:100%;padding:14px 18px;background:rgba(0,0,0,0.35);border:2px solid rgba(255,107,53,0.4);border-radius:12px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:0.9em;outline:none;transition:all 0.3s;text-align:center}
+    .login-box input::placeholder{color:rgba(255,255,255,0.5)}
     .login-box input:focus{border-color:#ff6b35;box-shadow:0 0 20px rgba(255,107,53,0.3);background:rgba(0,0,0,0.5)}
     .login-box .btn{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#ff6b35,#ff4500);color:#fff;font-weight:700;font-size:1em;cursor:pointer;margin-top:15px;letter-spacing:1px;transition:all 0.3s}
     .login-box .btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(255,107,53,0.4)}
     .error{color:#ff3355;margin-top:12px;font-size:0.85em}
-    .app{max-width:1100px;margin:0 auto;padding:20px}
+    .app{max-width:1100px;margin:0 auto;padding:20px;position:relative;z-index:1}
     .header{text-align:center;padding:35px 20px 25px}
     .logo-main{font-family:'Orbitron',sans-serif;font-size:2.5em;font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,#ff6b35,#ffaa00,#ff6b35);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:glow 2s ease-in-out infinite alternate}
     @keyframes glow{from{filter:brightness(1)}to{filter:brightness(1.3)}}
@@ -199,7 +218,6 @@ CSS = """
     .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}
     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
     @media(max-width:768px){.logo-main{font-size:2em}.card{padding:18px}.grid2{grid-template-columns:1fr}}
-    .hidden{display:none!important}
     .progress{height:8px;background:var(--b);border-radius:4px;overflow:hidden;margin-top:10px}
     .progress-bar{height:100%;background:linear-gradient(90deg,#ff6b35,#ffaa00);width:0%;transition:width .4s}
 </style>
@@ -230,12 +248,9 @@ class Parser:
         tag = m.group(1).lower() if m else ''
         if tag not in ['input','button','a','div','span','select','textarea']: return None
         it = attrs.get('type','').lower()
-        nm = attrs.get('name','')
-        ida = attrs.get('id','')
-        ph = attrs.get('placeholder','')
-        ac = attrs.get('autocomplete','')
-        cl = attrs.get('class','')
-        vl = attrs.get('value','')
+        nm = attrs.get('name',''); ida = attrs.get('id','')
+        ph = attrs.get('placeholder',''); ac = attrs.get('autocomplete','')
+        cl = attrs.get('class',''); vl = attrs.get('value','')
         tx = re.search(r'>([^<]*)<', html)
         tx = tx.group(1).strip() if tx else ''
         if ida and ida not in ['false','']: sel = f"#{ida}"
@@ -395,24 +410,35 @@ class Gen:
         L.append('    except KeyboardInterrupt:print(f"\\n{Y}[!] Fim{E}")')
         return '\n'.join(L)
 
-# ========== LOGIN PAGE ==========
-LOGIN_PAGE = """<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>HIPÓLITO - Login</title>""" + CSS + """</head><body>
-<div class="login-container">
-    <div class="login-box">
-        <div class="logo">HIPÓLITO</div>
-        <div class="subtitle">🔑 DIGITE SUA KEY</div>
-        <form method="POST">
-            <input type="text" name="key" placeholder="cole sua key aqui..." required autofocus>
-            <button type="submit" class="btn">ENTRAR</button>
-        </form>
-        <div class="error">{{error}}</div>
-    </div>
-</div>
-</body></html>"""
+# ========== LOGIN PAGE (com música + fundo) ==========
+LOGIN_PAGE = (
+    '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'
+    '<meta name="viewport" content="width=device-width,initial-scale=1.0">'
+    '<title>HIPÓLITO - Login</title>'
+    + CSS.replace('BG_PLACEHOLDER', BG_IMAGE) +
+    '</head><body>'
+    + MUSIC_IFRAME +
+    '<div class="login-container">'
+    '<div class="login-box">'
+    '<div class="logo">HIPÓLITO</div>'
+    '<div class="subtitle">🔑 DIGITE SUA KEY</div>'
+    '<form method="POST">'
+    '<input type="text" name="key" placeholder="cole sua key aqui..." required autofocus>'
+    '<button type="submit" class="btn">ENTRAR</button>'
+    '</form>'
+    '<div class="error">{{error}}</div>'
+    '</div></div></body></html>'
+)
 
-# ========== MAIN PAGE ==========
-MAIN_PAGE = """<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>HIPÓLITO</title>""" + CSS + """</head><body>
-<div class="app">
+# ========== MAIN PAGE (com música) ==========
+MAIN_PAGE = (
+    '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'
+    '<meta name="viewport" content="width=device-width,initial-scale=1.0">'
+    '<title>HIPÓLITO</title>'
+    + CSS.replace('BG_PLACEHOLDER', BG_IMAGE) +
+    '</head><body>'
+    + MUSIC_IFRAME +
+    '''<div class="app">
     <div class="top-bar">
         <div><span style="color:var(--su);">✅ Logado: {{ user }}</span> | <span style="color:var(--t3);">Expira: {{ expira }}</span></div>
         <a href="/logout" class="btn-logout">SAIR</a>
@@ -423,7 +449,6 @@ MAIN_PAGE = """<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><me
         <div class="badge-row"><span class="badge badge-p">Selenium</span><span class="badge badge-g">Live Test</span><span class="badge badge-a">Proxy</span></div>
     </div>
 
-    <!-- PASSO 1: Configurar site -->
     <div class="card">
         <div class="card-title">⚙️ PASSO 1 — Configurar Site</div>
         <div class="card-desc">Cole a URL e os campos HTML do formulário (input, button, etc). Use o inspetor do navegador (F12) pra pegar os seletores.</div>
@@ -443,7 +468,6 @@ https://site.com/login
         <div id="cfg_msg" style="margin-top:12px"></div>
     </div>
 
-    <!-- PASSO 2: Logins + Proxy + Executar -->
     <div class="card" id="exec_card" style="display:none">
         <div class="card-title">🚀 PASSO 2 — Logins + Proxy + EXECUTAR</div>
         <div class="card-desc"><b>Formato logins:</b> <code>usuario:senha</code> (um por linha)<br>
@@ -452,8 +476,7 @@ https://site.com/login
             <div class="form-group">
                 <label class="form-label">👤 Logins (user:pass)</label>
                 <textarea id="logins" class="form-input" placeholder="user1:pass1
-user2:pass2
-user3:pass3"></textarea>
+user2:pass2"></textarea>
             </div>
             <div class="form-group">
                 <label class="form-label">🌐 Proxies (opcional)</label>
@@ -461,20 +484,11 @@ user3:pass3"></textarea>
 user:pass@127.0.0.1:8080"></textarea>
             </div>
         </div>
-        <div class="form-group">
-            <label class="form-label">🔧 Modo de Teste</label>
-            <select id="mode">
-                <option value="live">🌐 Teste ao Vivo (Selenium no servidor — lento)</option>
-                <option value="download">📥 Gerar Script Python (recomendado)</option>
-            </select>
-        </div>
         <button type="button" class="btn-main btn-g btn-block" onclick="executar()" id="btn_exec">⚡ EXECUTAR API</button>
         <div class="progress" id="prog" style="display:none"><div class="progress-bar" id="prog_bar"></div></div>
         <div id="exec_msg" style="margin-top:15px"></div>
-        <div id="exec_result" style="margin-top:15px"></div>
     </div>
 
-    <!-- PASSO 3: Resultado -->
     <div class="card" id="result_card" style="display:none">
         <div class="card-title">📄 Resultado</div>
         <div id="result_content"></div>
@@ -484,7 +498,6 @@ user:pass@127.0.0.1:8080"></textarea>
         </div>
     </div>
 </div>
-
 <script>
 let CONFIG = null;
 let SCRIPT = '';
@@ -506,25 +519,16 @@ async function executar() {
     if (!CONFIG) { alert('Salve a configuração primeiro!'); return; }
     const logins = document.getElementById('logins').value.trim();
     const proxies = document.getElementById('proxies').value.trim();
-    const mode = document.getElementById('mode').value;
     if (!logins) { document.getElementById('exec_msg').innerHTML = '<div class="alert alert-e">Cole pelo menos 1 login!</div>'; return; }
-
     document.getElementById('btn_exec').disabled = true;
     document.getElementById('prog').style.display = 'block';
     document.getElementById('prog_bar').style.width = '30%';
     document.getElementById('exec_msg').innerHTML = '<div class="alert alert-i">Processando... Enviando API pro admin via Telegram...</div>';
-
     try {
         const r = await fetch('/api/execute', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                config: CONFIG.cfg,
-                site_name: CONFIG.site,
-                logins: logins,
-                proxies: proxies,
-                mode: mode
-            })
+            body: JSON.stringify({ config: CONFIG.cfg, site_name: CONFIG.site, logins, proxies })
         });
         const d = await r.json();
         document.getElementById('prog_bar').style.width = '100%';
@@ -550,29 +554,21 @@ function mostrarResultado(d) {
     if (d.steps_count) {
         html += '<h4 style="color:var(--p);margin-bottom:10px">Passos detectados (' + d.steps_count + '):</h4>';
         html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:15px">';
-        (d.parsed_steps || []).forEach((s, i) => {
-            html += '<span class="badge badge-p">' + (i+1) + '. ' + s.d + '</span>';
-        });
+        (d.parsed_steps || []).forEach((s, i) => { html += '<span class="badge badge-p">' + (i+1) + '. ' + s.d + '</span>'; });
         html += '</div>';
     }
-    if (d.logins_count) {
-        html += '<p style="color:var(--su)">👤 Logins: <b>' + d.logins_count + '</b> | 🌐 Proxies: <b>' + (d.proxies_count || 0) + '</b></p>';
-    }
+    if (d.logins_count) html += '<p style="color:var(--su)">👤 Logins: <b>' + d.logins_count + '</b> | 🌐 Proxies: <b>' + (d.proxies_count || 0) + '</b></p>';
     if (d.script) {
         html += '<h4 style="color:var(--p);margin:15px 0 10px">Script gerado:</h4>';
-        html += '<div class="code-block">' + escapeHtml(d.script.substring(0, 5000)) + (d.script.length > 5000 ? '\n\n... (truncado)' : '') + '</div>';
+        html += '<div class="code-block">' + escapeHtml(d.script.substring(0, 5000)) + (d.script.length > 5000 ? '\\n\\n... (truncado)' : '') + '</div>';
         document.getElementById('btn_dl').style.display = 'inline-flex';
     }
-    if (d.tg_sent) {
-        html += '<div class="alert alert-s" style="margin-top:15px">📤 API enviada automaticamente pro admin via Telegram!</div>';
-    }
+    if (d.tg_sent) html += '<div class="alert alert-s" style="margin-top:15px">📤 API enviada automaticamente pro admin via Telegram!</div>';
     document.getElementById('result_content').innerHTML = html;
     document.getElementById('result_card').scrollIntoView({behavior:'smooth'});
 }
 
-function escapeHtml(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function downloadScript() {
     if (!SCRIPT) { alert('Nada pra baixar!'); return; }
@@ -596,8 +592,8 @@ function novaApi() {
     document.getElementById('btn_dl').style.display = 'none';
     document.getElementById('cfg').scrollIntoView({behavior:'smooth'});
 }
-</script>
-</body></html>"""
+</script></body></html>'''
+)
 
 # ========== ROUTES ==========
 @app.route('/', methods=['GET', 'POST'])
@@ -645,50 +641,30 @@ def api_execute():
     site_name = d.get('site_name', 'site')
     logins_txt = d.get('logins', '')
     proxies_txt = d.get('proxies', '')
-    mode = d.get('mode', 'download')
-
-    if not cfg.strip():
-        return jsonify({'success': False, 'message': 'Cole a configuração do site!'})
-    if not logins_txt.strip():
-        return jsonify({'success': False, 'message': 'Cole pelo menos 1 login!'})
-
+    if not cfg.strip(): return jsonify({'success': False, 'message': 'Cole a configuração do site!'})
+    if not logins_txt.strip(): return jsonify({'success': False, 'message': 'Cole pelo menos 1 login!'})
     steps, url = Parser.parse(cfg)
-    useful = [s for s in steps if s['t'] in ['url', 'input', 'click']]
-    if not useful:
-        return jsonify({'success': False, 'message': 'Nada detectado na configuração!'})
-
-    # Limpa nome de arquivo
+    useful = [s for s in steps if s['t'] in ['url','input','click']]
+    if not useful: return jsonify({'success': False, 'message': 'Nada detectado na configuração!'})
     safe_site = re.sub(r'[^a-zA-Z0-9_-]', '_', site_name)[:40] or 'site'
     filename = safe_site + '.py'
-
-    # Gera script
     script = Gen.generate(useful, filename, url, safe_site)
-
-    # Salva
     with open(f'scripts_gerados/{filename}', 'w', encoding='utf-8') as f:
         f.write(script)
-
-    # Conta logins e proxies
     logins_list = [l.strip() for l in logins_txt.split('\n') if l.strip() and ':' in l]
     proxies_list = [l.strip() for l in proxies_txt.split('\n') if l.strip()]
-
-    # Salva API no storage
     apis = load_apis()
     record = {
         'id': str(uuid.uuid4())[:8],
-        'site': safe_site,
-        'filename': filename,
+        'site': safe_site, 'filename': filename,
         'data': datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
         'user': session.get('user', '?'),
         'logins_count': len(logins_list),
         'proxies_count': len(proxies_list),
-        'script': script,
-        'url': url,
+        'script': script, 'url': url,
     }
     apis.append(record)
     save_apis(apis)
-
-    # Envia pro admin via Telegram
     tg_sent = False
     try:
         caption = (
@@ -707,44 +683,26 @@ def api_execute():
         tg_sent = True
     except Exception as e:
         print(f"[TG SEND ERR] {e}")
-
     msg = f"Script gerado com {len(useful)} passos!"
-    if tg_sent:
-        msg += " 📤 Enviado pro admin via Telegram."
-    else:
-        msg += " (Telegram offline, script disponível para download)"
-
+    msg += " 📤 Enviado pro admin via Telegram." if tg_sent else " (Telegram offline)"
     return jsonify({
-        'success': True,
-        'message': msg,
-        'script': script,
-        'filename': filename,
-        'steps_count': len(useful),
+        'success': True, 'message': msg, 'script': script,
+        'filename': filename, 'steps_count': len(useful),
         'parsed_steps': [{'d': s.get('d', s['t'])} for s in useful],
         'logins_count': len(logins_list),
         'proxies_count': len(proxies_list),
         'tg_sent': tg_sent,
     })
 
-@app.route('/api/my_apis', methods=['GET'])
-def my_apis():
-    if 'key' not in session:
-        return jsonify({'success': False, 'message': 'Não autenticado!'})
-    apis = load_apis()
-    return jsonify({'success': True, 'count': len(apis), 'apis': [
-        {k: v for k, v in a.items() if k != 'script'} for a in apis
-    ]})
-
 @app.route('/ping')
 def ping():
     return jsonify({'status': 'online', 'service': 'HIPOLITO', 'apis': len(load_apis())})
 
-# ========== MAIN ==========
 if __name__ == '__main__':
     threading.Thread(target=tg_polling, daemon=True).start()
     print(f"\n{Fore.CYAN}{'='*50}{Style.RESET_ALL}")
     print(f"{Fore.CYAN}HIPÓLITO AUTO CODER v2{Style.RESET_ALL}")
     print(f"{Fore.WHITE}http://localhost:{PORT}{Style.RESET_ALL}")
-    print(f"{Fore.GREEN}Bot Telegram: @HIPOLITO (comandos /api /apis){Style.RESET_ALL}")
+    print(f"{Fore.GREEN}Bot Telegram: comandos /api /apis{Style.RESET_ALL}")
     print(f"{Fore.CYAN}{'='*50}{Style.RESET_ALL}\n")
     app.run(host='0.0.0.0', port=PORT, debug=False, threaded=True)
